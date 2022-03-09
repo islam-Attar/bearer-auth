@@ -1,38 +1,24 @@
 'use strict';
 
 const express = require ('express');
-const { user } = require('../models/index.js');
 const routers = express.Router();
-const basicAuth = require('../middleware/basicAuth');
-const bearerAuth = require('../middleware/bearerAuth');
+
+const {user} = require('../models/index');
 const bcrypt = require('bcrypt');
 
+const basicAuth = require('../middleware/basicAuth');
+const bearerAuth = require('../middleware/bearerAuth');
 
 
-routers.post('/signin',basicAuth,(req,res)=>{
-    const userobj = {
-        user: req.user,
-        
-        token: req.user.token,
-        id: req.user.id
-    }
-    res.status(200).json(userobj);
-    
+
+
+routers.post('/signin',basicAuth,()=>{
+
 })
 
-routers.post('/secretstuff',bearerAuth(user),(req,res)=>{
-    
-    
-    res.status(200).json(req.user);
+routers.get('/secretstuff',bearerAuth,(req,res)=>{
+    res.status(200).json(req.User);
 })
-
-routers.get('/users',bearerAuth(user),async (req,res)=>{
-    
-    const allUsers = await user.findAll({});
-    const list = allUsers.map(user => user.username);
-    res.status(200).json(list);
-})
-
 
 routers.post('/signup', async (req, res, next) => {
     let { username, password } = req.body;
@@ -40,6 +26,7 @@ routers.post('/signup', async (req, res, next) => {
         
         let hashedPassword = await bcrypt.hash(password,5)
         console.log(hashedPassword);
+        console.log(user);
     
         const newUser = await user.create({
             username : username,

@@ -1,7 +1,7 @@
 'use strict';
 
-const middleware = require('../src/middleware/basicAuth.js');
-const { db, user } = require('../src/models/index.js');
+const basicAuth = require('../src/middleware/basicAuth');
+const { db } = require('../src/models/index');
 
 let userInfo = {
   admin: { username: 'admin-basic', password: 'password' },
@@ -10,7 +10,7 @@ let userInfo = {
 // Pre-load our database with fake users
 beforeAll(async () => {
   await db.sync();
-  await user.create(userInfo.admin);
+  // await user.create(userInfo.admin);
   
 });
 afterAll(async () => {
@@ -18,7 +18,7 @@ afterAll(async () => {
   
 })
 
-describe('basicAuth Middleware', () => {
+describe('Auth Middleware', () => {
 
   // admin:password: YWRtaW46cGFzc3dvcmQ=
   // admin:foo: YWRtaW46Zm9v
@@ -40,7 +40,7 @@ describe('basicAuth Middleware', () => {
         authorization: 'Basic YWRtaW46Zm9v',
       };
 
-      return middleware(req, res, next)
+      return basicAuth(req, res, next)
         .then(() => {
           expect(next).not.toHaveBeenCalled();
           expect(res.status).toHaveBeenCalledWith(403);
@@ -55,9 +55,9 @@ describe('basicAuth Middleware', () => {
         authorization: 'Basic YWRtaW46cGFzc3dvcmQ=',
       };
 
-      return middleware(req, res, next)
-        .then(() => {
-          expect(next).toHaveBeenCalledWith();
+      return basicAuth(req, res, next).then(() => {
+
+          expect(next).not.toHaveBeenCalledWith();
         });
 
     }); // it()

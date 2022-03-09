@@ -1,9 +1,9 @@
 'use strict';
+
 const {Sequelize, DataTypes} = require('sequelize');
 const user = require('./user');
 require('dotenv').config();
 
-console.log('2222222', user);
 const myPOSTGRES_URL = process.env.NODE_ENV === 'test' ? 'sqlite:memory:' : process.env.DATABASE_URL ;
 
 let sequelizeOptions = process.env.NODE_ENV === 'production' ? {

@@ -1,21 +1,31 @@
 'use strict';
+const {user}=require('../models/index');
+const JWT = require('jsonwebtoken');
+const SECRET = process.env.SECRET || "i hate testing";
 
-module.exports = (UserModel) =>async (req,res,next)=>{
-    try{
-    if(req.headers['authorization']) {
-        // 'Bearer token'
-        let bearerHeaderParts= req.headers.authorization.split(' ');
-        console.log('bearerHeaderParts >>> ',bearerHeaderParts); // ['Bearer','token']
-        let token = bearerHeaderParts.pop(); //encoded(username:password)
-        console.log('Token >>> ',token);
+const bearerAuth = async (req,res,next)=>{
+  if (req.headers.authorization) {
+      try {
+    let bearerToken = req.headers.authorization.split(' ');
+    let token = bearerToken.pop();
+    
+    if (token) {
         
-       
-        UserModel.validateToken(token).then(user=>{
-            req.user = user;
+        const userToken = JWT.verify(token,SECRET);
+        const User = await user.findOne({where:{username : userToken.username}});
+
+        if (User) {
+            req.token = userToken;
+            req.User = User;
             next();
-        }).catch(res.status(403).send('invalid token'));
-    }
-}catch(error){
-   res.status(403).send('invalid token')
-}
-}
+            } else {
+               res.status(403).send('invalid user')
+            } 
+      } }catch (error) {
+        res.status(403).send('invalid Token');
+      }
+}else{
+    res.status(403).send('Empty Token')
+}}
+
+module.exports=bearerAuth;

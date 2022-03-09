@@ -1,31 +1,23 @@
 'use strict';
+const server = require('../src/server');
+const supertest = require('supertest')
+const mockRequest = supertest(server.app);
+const {db}= require('../src/models/index.js');
 
 process.env.SECRET = "toes";
 
-const supertest = require('supertest');
-const server = require('../src/server.js');
-const { db } = require('../src/models/index.js');
-
-const mockRequest = supertest(server.app);
+beforeAll( async () =>{
+    await db.sync();
+})
+afterAll( async () =>{
+    await db.drop();
+})
 
 let users = {
-  admin: { id: 0, username: 'admin', password: 'password' },
-  editor: { id: 1,username: 'editor', password: 'password' },
-  user: { id: 2, username: 'user', password: 'password' },
+  admin: { id:0 ,username: 'admin', password: 'password' },
+  editor: { id:1 ,username: 'editor', password: 'password' },
+  user: { id:2, username: 'user', password: 'password' },
 };
-
-beforeAll(async () => {
-  await db.sync();
-  
-  
-});
-afterAll(async () => {
-  await db.drop();
-  
-  
-});
-
-
 describe('Auth Router', () => {
 
   Object.keys(users).forEach(userType => {
@@ -36,13 +28,10 @@ describe('Auth Router', () => {
 
         const response = await mockRequest.post('/signup').send(users[userType]);
         const userObject = response.body;
-        console.log('userObject', userObject);
-
         expect(response.status).toBe(201);
         expect(userObject.token).toBeDefined();
         expect(userObject.id).toBeDefined();
         expect(userObject.username).toEqual(users[userType].username)
-        
       });
 
       it('can signin with basic', async () => {
@@ -51,12 +40,10 @@ describe('Auth Router', () => {
           .auth(users[userType].username, users[userType].password);
 
         const userObject = response.body;
-        console.log('!!!!!!!!!!!!!', userObject);
         expect(response.status).toBe(200);
         expect(userObject.token).toBeDefined();
         expect(userObject.id).toBeDefined();
         expect(userObject.username).toEqual(users[userType].username)
-        
       });
 
       it('can signin with bearer', async () => {
@@ -89,7 +76,6 @@ describe('Auth Router', () => {
         expect(response.status).toBe(403);
         expect(userObject.user).not.toBeDefined();
         expect(userObject.token).not.toBeDefined();
-        
       });
 
       it('basic fails with unknown user', async () => {
@@ -101,7 +87,6 @@ describe('Auth Router', () => {
         expect(response.status).toBe(403);
         expect(userObject.user).not.toBeDefined();
         expect(userObject.token).not.toBeDefined()
-        
       });
 
       it('bearer fails with an invalid token', async () => {
@@ -113,7 +98,6 @@ describe('Auth Router', () => {
 
         // Not checking the value of the response, only that we "got in"
         expect(bearerResponse.status).toBe(403);
-        
       })
     })
 

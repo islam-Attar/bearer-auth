@@ -1,22 +1,34 @@
-
-'use strict';
-
-
-const { user } = require('../models/index.js')
+'use strict'
+const bcrypt = require('bcrypt');
 const base64 = require('base-64');
+const { user } = require('../models/index');
+const JWT = require('jsonwebtoken')
+const SECRET = process.env.SECRET || "i hate testing";
+const basicAuth = async (req, res, next) => {
+    try {
+        if (req.headers.authorization) {
+            let basicHeeaderParts = req.headers.authorization.split(' ');
+            console.log('basicHeeaderParts', basicHeeaderParts);
+            let encoded = basicHeeaderParts.pop();
+            let decoded = base64.decode(encoded);
+            let [username, password] = decoded.split(':');
 
-module.exports = async (req, res, next) => {
+            const User = await user.findOne({ where: { username: username } });
+            const PWD = await bcrypt.compare(password, User.password);
+            if (PWD) {
+                req.User = User // req ={user : user} 
+                console.log(req.User);
+                // generating the token
+                let newToken = JWT.sign({username:User.username},SECRET,{expiresIn : 500000});
+                User.token = newToken;
+                res.status(200).json(User);
+            } else {
+                res.status(403).send('invalid login Password');
+            }
+        }} catch(error) {
+            res.status(403).send('invalid login Username');
+        }
 
-  if (!req.headers.authorization) { next('Unauthorized User'); };
-  
-  let basic = req.headers.authorization.split(' ')[1];
-  let [username, password] = base64.decode(basic).split(':');
+    }
 
-  try {
-    req.user = await user.authenticateBasic(username, password);
-    next();
-  } catch (e) {
-    res.status(403).send('Invalid Login');
-  }
-
-}
+module.exports = basicAuth;
