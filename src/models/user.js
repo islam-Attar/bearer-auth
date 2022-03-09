@@ -2,7 +2,7 @@
 
 require('dotenv').config();
 const JWT = require('jsonwebtoken');
-const SECRET = process.env.SECRET || "my secret";
+const SECRET = process.env.SECRET || "i hate testing";
 
 
 const user = (sequelize, DataTypes) => sequelize.define('user', {
